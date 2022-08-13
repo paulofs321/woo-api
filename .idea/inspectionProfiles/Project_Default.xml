@@ -1,0 +1,67 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyArgumentListInspection" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="PyBroadExceptionInspection" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="PyInterpreterInspection" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="false" level="WARNING" enabled_by_default="false">
+      <option name="ignoredPackages">
+        <value>
+          <list size="24">
+            <item index="0" class="java.lang.String" itemvalue="boto3" />
+            <item index="1" class="java.lang.String" itemvalue="flask-migrate" />
+            <item index="2" class="java.lang.String" itemvalue="marshmallow-sqlalchemy" />
+            <item index="3" class="java.lang.String" itemvalue="sqlalchemy-utils" />
+            <item index="4" class="java.lang.String" itemvalue="clickclick" />
+            <item index="5" class="java.lang.String" itemvalue="psycopg2-binary" />
+            <item index="6" class="java.lang.String" itemvalue="marshmallow" />
+            <item index="7" class="java.lang.String" itemvalue="connexion" />
+            <item index="8" class="java.lang.String" itemvalue="gunicorn" />
+            <item index="9" class="java.lang.String" itemvalue="python-editor" />
+            <item index="10" class="java.lang.String" itemvalue="prometheus-client" />
+            <item index="11" class="java.lang.String" itemvalue="openapi-spec-validator" />
+            <item index="12" class="java.lang.String" itemvalue="sqlalchemy" />
+            <item index="13" class="java.lang.String" itemvalue="prometheus-flask-exporter" />
+            <item index="14" class="java.lang.String" itemvalue="chardet" />
+            <item index="15" class="java.lang.String" itemvalue="pyyaml" />
+            <item index="16" class="java.lang.String" itemvalue="flask-marshmallow" />
+            <item index="17" class="java.lang.String" itemvalue="flask-script" />
+            <item index="18" class="java.lang.String" itemvalue="certifi" />
+            <item index="19" class="java.lang.String" itemvalue="flask-cors" />
+            <item index="20" class="java.lang.String" itemvalue="flask" />
+            <item index="21" class="java.lang.String" itemvalue="swagger-ui-bundle" />
+            <item index="22" class="java.lang.String" itemvalue="jsonschema" />
+            <item index="23" class="java.lang.String" itemvalue="inflection" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="N812" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="botocore.*" />
+          <option value="Exception.*" />
+          <option value="projects.models.Project.objects" />
+          <option value="projects.models.Review.objects" />
+          <option value="django.db.models.fields.related.OneToOneField.username" />
+          <option value="users.models.Profile.objects" />
+          <option value="users.models.Skill.objects" />
+          <option value="projects.models.Tag.objects" />
+          <option value="projects.models.Project.review_set" />
+          <option value="users.models.Message.objects" />
+          <option value="django.db.models.fields.files.ImageField.url" />
+          <option value="property.setter" />
+          <option value="property.deleter" />
+          <option value="type.metadata" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
