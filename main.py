@@ -1,7 +1,14 @@
+import time
+
+import aiohttp
+import json
+import asyncio
 from fastapi import FastAPI
 from hiveengine.nft import Nft
 from hiveengine.tokenobject import Token
 from nfts_config import config
+
+hiveengine_version = "0.2.2"
 
 app = FastAPI()
 
@@ -11,96 +18,78 @@ async def root():
     return {"message": "FASTAPI Service is currently running."}
 
 
-@app.get("/mints")
-async def mints():
-    data = []
+@app.get("/mints/{edition}")
+async def mints(edition: int):
+    i = 1
+    tasks = []
+    gf_tasks = []
+    start = time.time()
     nft = Nft(symbol="Woo")
 
-    mints = {}
-    for k, v in config.items():
-        nfts_0 = nft.api.find_all("nft", "%sinstances" % nft.symbol,
-                                  query={
-                                      "properties.edition": 0,
-                                      "properties.type": v["type"]
-                                  })
+    url = "https://api.hive-engine.com/rpc/contracts"
+    headers = {'User-Agent': 'hiveengine v%s' % hiveengine_version,
+               'content-type': 'application/json'}
+    payload = {"method": "find", "jsonrpc": "2.0",
+               "params": {"contract": "nft", "table": f"{nft.symbol}instances",
+                          "limit": 1000, "offset": 0, "indexes": []},
+               "id": i}
 
-        nfts_1 = nft.api.find_all("nft", "%sinstances" % nft.symbol,
-                                  query={
-                                      "properties.edition": 1,
-                                      "properties.type": v["type"]
-                                  })
+    async with aiohttp.ClientSession() as session:
+        if edition == 2:
+            for j in range(2):
+                payload["params"]["query"] = {"properties.edition": edition,
+                                              "properties.type": j}
 
-        foil_nfts_0 = nft.api.find_all("nft", "%sinstances" % nft.symbol,
-                                       query={
-                                           "properties.edition": 0,
-                                           "properties.type": v["type"],
-                                           "properties.foil": 1
-                                       })
+                tasks.append(asyncio.create_task(query_mints(url, json.dumps(payload), headers, session)))
 
-        foil_nfts_1 = nft.api.find_all("nft", "%sinstances" % nft.symbol,
-                                       query={
-                                           "properties.edition": 1,
-                                           "properties.type": v["type"],
-                                           "properties.foil": 1
-                                       })
+                gf_payload = payload
+                gf_payload["params"]["query"]["properties.foil"] = 1
 
-        # woo_nft = {
-        #     k: {
-        #         "Edition_0": len(nfts_0),
-        #         "Edition_0_GF": len(foil_nfts_0),
-        #         "Edition_1": len(nfts_1),
-        #         "Edition_1_GF": len(foil_nfts_1)
-        #     }
-        # }
-        mints[k] = {
-            "Edition_0": len(nfts_0),
-            "Edition_0_GF": len(foil_nfts_0),
-            "Edition_1": len(nfts_1),
-            "Edition_1_GF": len(foil_nfts_1)
-        }
+                gf_tasks.append(asyncio.create_task(query_mints(url, json.dumps(gf_payload),
+                                                                headers, session)))
 
-        #data.append(woo_nft)
-
-    for i in range(2):
-        nfts_2 = nft.api.find_all("nft", "%sinstances" % nft.symbol,
-                                  query={
-                                      "properties.edition": 2,
-                                      "properties.type": i
-                                  })
-
-        foil_nfts_2 = nft.api.find_all("nft", "%sinstances" % nft.symbol,
-                                       query={
-                                           "properties.edition": 2,
-                                           "properties.type": i,
-                                           "properties.foil": 1
-                                       })
-
-        if i == 0:
-            # woo_nft = {
-            #     "Raven": {
-            #         "Edition_2": len(nfts_2),
-            #         "Edition_2_GF": len(foil_nfts_2)
-            #     }
-            # }
-            mints["Raven"] = {
-                "Edition_2": len(nfts_2),
-                "Edition_2_GF": len(foil_nfts_2)
-            }
+                i += 1
         else:
-            # woo_nft = {
-            #     "Raven lore": {
-            #         "Edition_2": len(nfts_2),
-            #         "Edition_2_GF": len(foil_nfts_2)
-            #     }
-            # }
-            mints["Raven lore"] = {
-                "Edition_2": len(nfts_2),
-                "Edition_2_GF": len(foil_nfts_2)
+            for k, v in config.items():
+                payload["params"]["query"] = {"properties.edition": edition,
+                                              "properties.type": v["type"]}
+
+                tasks.append(asyncio.create_task(query_mints(url, json.dumps(payload),
+                                                             headers, session)))
+
+                gf_payload = payload
+                gf_payload["params"]["query"]["properties.foil"] = 1
+
+                gf_tasks.append(asyncio.create_task(query_mints(url, json.dumps(gf_payload),
+                                                                headers, session)))
+
+                i += 1
+
+        nft_data = [data for data in await asyncio.gather(*tasks)]
+        gf_data = [data for data in await asyncio.gather(*gf_tasks)]
+
+    mints_data = {}
+
+    if edition == 2:
+        for i in range(2):
+            name = "Raven" if i == 0 else "Raven Lore"
+
+            mints_data[name] = {
+                "Edition_2": nft_data[i],
+                "Edition_2_GF": gf_data[i]
+            }
+    else:
+        i = 0
+        for k in config.keys():
+            mints_data[k] = {
+                f"Edition_{edition}": nft_data[i],
+                f"Edition_{edition}_GF": gf_data[i]
             }
 
-        #data.append(woo_nft)
+            i += 1
 
-    return mints
+    print(f"total time processed: {time.time() - start}")
+    return mints_data
 
 
 @app.get("/holders")
@@ -134,3 +123,54 @@ async def holders():
                 holders_dict[i["account"]] = {"raven_balance": i["balance"]}
 
     return holders_dict
+
+
+async def async_query(url, payload, headers=None, session=None):
+    flag = False
+    result = []
+
+    while not flag:
+        async with session.post(url=url, data=payload, headers=headers, timeout=60, ssl=False) as resp:
+            # print(resp.status)
+            if resp.status != 200:
+                continue
+
+            last_result = await resp.json()
+
+            return last_result["result"]
+        # await asyncio.sleep(1)
+
+        # last_result = last_result["result"]
+
+        # if last_result is not None:
+        #     print(json.loads(payload)["params"]["query"]["properties.type"], len(last_result))
+        #     result += last_result
+        #     offset += limit
+        #     new_payload = json.loads(payload)
+        #     new_payload["params"]["offset"] = offset
+        #     payload = json.dumps(new_payload)
+
+    # print(json.loads(payload)["params"]["query"]["properties.type"], len(result))
+    return result
+
+
+async def query_mints(url, payload, headers, session):
+    limit = 1000
+    offset = 0
+    last_result = []
+    cnt = 0
+    result = 0
+
+    while last_result is not None and len(last_result) == limit or cnt == 0:
+        cnt += 1
+        last_result = await async_query(url, payload, headers, session)
+
+        if last_result is not None:
+            # print(json.loads(payload)["params"]["query"]["properties.type"], len(last_result))
+            result += len(last_result)
+            offset += limit
+            new_payload = json.loads(payload)
+            new_payload["params"]["offset"] = offset
+            payload = json.dumps(new_payload)
+
+    return result
